@@ -1,6 +1,9 @@
 import { constants, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
+// Windows can't create symlinks without Developer Mode, so copy the files they point to instead
+const copyLinks = process.platform === "win32" ? { dereference: true } : { verbatimSymlinks: true };
+
 export const compiled = resolve(".next");
 export const root = resolve("../..");
 export const appDirectory = relative(root, process.cwd());
@@ -74,7 +77,7 @@ export function copyFiles(files, destinationRoot) {
     const destination = join(destinationRoot, relative(root, file));
     mkdirSync(dirname(destination), { recursive: true });
     if (symbolicLink) {
-      cpSync(file, destination, { recursive: true, verbatimSymlinks: true });
+      cpSync(file, destination, { recursive: true, ...copyLinks });
     } else {
       copyFileSync(file, destination, constants.COPYFILE_FICLONE);
     }
